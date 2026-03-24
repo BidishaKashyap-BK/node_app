@@ -28,6 +28,20 @@ return []
     
 }
 
+async function getProductsCount() {
+  try {
+    const [results] = await connection.query (
+      "SELECT COUNT(*) AS total FROM products"
+    );
+
+    return results[0].total;
+  } catch (err) {
+    console.log(err);
+    return 0;
+  }
+  
+}
+
 app.use(
   cors({
     origin: "*",
@@ -46,15 +60,23 @@ app.get("/me", (req, res)=>{
     res.json({
         id:"acbaxj",
         name: "Bidisha Kashyap"
-    })
-})
-
+    });
+});
 
 app.get("/products", async(req,res) => {
-   const query =  req.query
-   const products = await getProducts(query.offset, query.limit)
-    res.json(products)
-})
+   const offset = Number(req.query.offset) || 10;
+      const limit = Number(req.query.limit) || 10;
+
+      const products = await getProducts(offset, limit);
+      const total = await getProductsCount();
+
+    res.json({
+      products,
+      total,
+      offset,
+      limit
+});
+});
 
 
 app.listen(4000, () => {
