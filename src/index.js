@@ -15,7 +15,8 @@ const connection = await mysql.createConnection({
 async function getProducts(offset = 0, limit = 10) {
     try {
   const [results, fields] = await connection.query(
-    `SELECT * FROM products LIMIT ${offset}, ${limit}`
+    "SELECT * FROM products LIMIT ?, ?",
+    [offset, limit]
   );
 
 //   console.log("RESULTS", results); // results contains rows returned by server
@@ -64,8 +65,13 @@ app.get("/me", (req, res)=>{
 });
 
 app.get("/products", async(req,res) => {
-   const offset = Number(req.query.offset) || 10;
+  console.log("QUERY =", req.query)
+  
+   const offset = Number(req.query.offset) || 0;
       const limit = Number(req.query.limit) || 10;
+
+      console.log("OFFSET = ", offset)
+      console.log("LIMIT =", limit)
 
       const products = await getProducts(offset, limit);
       const total = await getProductsCount();
@@ -75,8 +81,8 @@ app.get("/products", async(req,res) => {
       total,
       offset,
       limit
-});
-});
+})
+})
 
 
 app.listen(4000, () => {
