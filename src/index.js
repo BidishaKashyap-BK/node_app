@@ -12,11 +12,12 @@ const connection = await mysql.createConnection({
   port: 3306
 });
 
-async function getProducts(offset = 0, limit = 10) {
+async function getProducts(offset = 0, limit = 10, search = "") {
     try {
-  const [results, fields] = await connection.query(
-    "SELECT * FROM products LIMIT ?, ?",
-    [offset, limit]
+      const searchText = `%${search}%`;
+  const [results] = await connection.query(
+    "SELECT * FROM products WHERE ptitle LIKE ? LIMIT ?, ?",
+    [searchText, offset, limit]
   );
 
 //   console.log("RESULTS", results); // results contains rows returned by server
@@ -29,10 +30,13 @@ return []
     
 }
 
-async function getProductsCount() {
+async function getProductsCount(search = "") {
   try {
+    const searchText = `%${search}%`
+
     const [results] = await connection.query (
-      "SELECT COUNT(*) AS total FROM products"
+      "SELECT COUNT(*) AS total FROM products WHERE ptitle LIKE ?",
+      [searchText]
     );
 
     return results[0].total;
@@ -65,16 +69,13 @@ app.get("/me", (req, res)=>{
 });
 
 app.get("/products", async(req,res) => {
-  console.log("QUERY =", req.query)
-  
+    
    const offset = Number(req.query.offset) || 0;
-      const limit = Number(req.query.limit) || 10;
-
-      console.log("OFFSET = ", offset)
-      console.log("LIMIT =", limit)
-
-      const products = await getProducts(offset, limit);
-      const total = await getProductsCount();
+   const limit = Number(req.query.limit) || 10;
+   const search = req.query.search || "";
+   
+   const products = await getProducts(offset, limit, search);
+   const total = await getProductsCount(search);
 
     res.json({
       products,
